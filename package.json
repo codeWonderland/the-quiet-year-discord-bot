@@ -11,7 +11,7 @@
     "start": "node app.js",
     "register": "node commands.js",
     "dev": "nodemon app.js",
-    "host": "ngrok http 3000"
+    "serve": "ngrok http 3000"
   },
   "author": "Alice Easter",
   "license": "MIT",
