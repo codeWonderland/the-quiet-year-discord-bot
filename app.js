@@ -499,7 +499,7 @@ Get your current amount of contempt points`;
     }
     
     if (name === 'log-event') {
-      const eventDetails = options.find((option) => option.name === 'event_details').value;
+      const eventDetails = data.options.find((option) => option.name === 'event_details').value;
       activeGame.logEvent(eventDetails);
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
