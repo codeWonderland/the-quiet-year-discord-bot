@@ -41,8 +41,6 @@ app.post('/interactions', async function (req, res) {
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data;
 
-    console.log(`${name} command submitted by ${member.user.username}`)
-
     // "new-game" command
     if (name === 'new-game') {
       
@@ -97,32 +95,30 @@ app.post('/interactions', async function (req, res) {
 
     if (name === 'start-game') {
       const currentPlayer = activeGame.getCurrentPlayer();
-      var messageContent = '';
-
-      if (currentPlayer !== undefined && currentPlayer.is_mod) {
+      if (currentPlayer.is_mod) {
         activeGame.startGame();
 
-        const playerOrder = activeGame.players.map((player, index) => (index === 0 ? '➡️ ' : '') + player.name).join('\n, ');
-        messageContent = `Game started! Player order: \n${playerOrder}\n\n
+        const playerOrder = activeGame.players.map((player, index) => (index === 0 ? '➡️ ' : '') + player.name).join(', ');
+        const messageContent = `Game started! Player order: ${playerOrder}
 The active player can start the week with /start-week`;
 
         activeGame.logEvent(messageContent)
         
-        
-      } else {
-        messageContent = "Whoops! Only a moderator can start the game. \nBecome a mod with /register-mod"
+        return res.send({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: messageContent,
+          },
+        });
       }
-
-      return res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: messageContent,
-        },
-      });
     }
 
     if (name === 'start-week') {
-      if (activeGame.getCurrentPlayer().name === member.user.username) {
+
+      const currentPlayer = activeGame.getCurrentPlayer();
+      const user = activeGame.getPlayerByName(member.user.username);
+
+      if (activeGame.getCurrentPlayer().name === member.user.username || (user && user.is_mod)) {
         let messageContent = '';
     
         if (activeGame.gameOver) {
@@ -178,10 +174,23 @@ Type /start-week to get the next prompt.`
 
     // "get-players" command
     if (name === 'get-players') {
+      
+      var messageContent = "Active Players:";
+
+      activeGame.players.forEach(player => {
+        messageContent = `${messageContent} ${player.name},`
+      });
+
+      if (activeGame.players.length === 0) {
+        messageContent = "No active players!";
+      } else {
+        messageContent = messageContent.substring(0, messageContent.length - 1)
+      }
+      
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: displayPlayers(),
+          content: messageContent,
         },
       });
     }
@@ -520,7 +529,7 @@ Get your current amount of contempt points`;
         return res.send({
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
           data: {
-            content: `Game state loaded successfully.\n\nSeason: ${activeGame.getCurrentSeason()}\n\n${displayPlayers()}`,
+            content: 'Game state loaded successfully.',
           },
         });
       } else {
@@ -534,22 +543,6 @@ Get your current amount of contempt points`;
     }
   }
 });
-
-function displayPlayers() {
-  var messageContent = "Active Players:";
-  const currentPlayer = activeGame.getCurrentPlayer()
-
-  activeGame.players.forEach(player => {
-    messageContent = `${messageContent}\n${player.name === currentPlayer.name ? "➡️ " : ""}${player.name},`
-  });
-
-  if (activeGame.players.length === 0) {
-    messageContent = "No active players!";
-  } else {
-    messageContent = messageContent.substring(0, messageContent.length - 1)
-  }
-  return messageContent
-}
 
 app.listen(PORT, () => {
   console.log('Listening on port', PORT);

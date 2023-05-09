@@ -202,6 +202,7 @@ class Game {
       this.abundances = loadedGameData.abundances;
       this.scarcities = loadedGameData.scarcities;
       this.logs = loadedGameData.logs;
+      this.year = loadedGameData.year;
       this.gameOver = loadedGameData.gameOver;
 
       return true;
